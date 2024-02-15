@@ -1,0 +1,83 @@
+mql5
+//+------------------------------------------------------------------+
+//|                                               RP FourThousand EA MT5|
+//|                                       https://www.forexroboteasy.com|
+//|                                          Developed by Forex Robot Easy Team|
+//+------------------------------------------------------------------+
+#property copyright 'Forex Robot Easy Team'
+#property link      'https://www.forexroboteasy.com'
+#property version   '1.00'
+#property strict
+
+// Input parameters
+input int KeltnerPeriod = 20; // Keltner Channel period
+input int ATRPeriod = 14; // ATR period
+input double EntryThreshold = 1.0; // Threshold for entry signals
+
+// Global variables
+double upperChannelBuffer[];
+double lowerChannelBuffer[];
+double atrBuffer[];
+
+// Initialization function
+int OnInit()
+{
+    IndicatorSetString(INDICATOR_SHORTNAME, 'RP FourThousand EA MT5');
+    SetIndexBuffer(0, upperChannelBuffer, INDICATOR_DATA);
+    SetIndexBuffer(1, lowerChannelBuffer, INDICATOR_DATA);
+    SetIndexBuffer(2, atrBuffer, INDICATOR_DATA);
+    IndicatorSetInteger(INDICATOR_DIGITS, _Digits);
+    SetIndexStyle(0, DRAW_LINE);
+    SetIndexStyle(1, DRAW_LINE);
+    SetIndexBuffer(2, DRAW_LINE);
+    return INIT_SUCCEEDED;
+}
+
+// Deinitialization function
+void OnDeinit(const int reason)
+{
+    // Empty
+}
+
+// Start function
+void OnStart()
+{
+    // Calculate Keltner Channel
+    for (int i = KeltnerPeriod; i < Bars; i++)
+    {
+        double sum = 0;
+        for (int j = 0; j < KeltnerPeriod; j++)
+        {
+            sum += TrueRange(i - j);
+        }
+        double atr = sum / KeltnerPeriod;
+        double upperChannel = iMA(NULL, 0, KeltnerPeriod, 0, MODE_EMA, PRICE_CLOSE, i) + EntryThreshold * atr;
+        double lowerChannel = iMA(NULL, 0, KeltnerPeriod, 0, MODE_EMA, PRICE_CLOSE, i) - EntryThreshold * atr;
+
+        upperChannelBuffer[i] = upperChannel;
+        lowerChannelBuffer[i] = lowerChannel;
+        atrBuffer[i] = atr;
+    }
+
+    // Check for entry signals
+    if (Close[1] > upperChannelBuffer[1] && Close[0] < upperChannelBuffer[0])
+    {
+        // Buy signal
+        // Add your buy code here
+    }
+    else if (Close[1] < lowerChannelBuffer[1] && Close[0] > lowerChannelBuffer[0])
+    {
+        // Sell signal
+        // Add your sell code here
+    }
+}
+
+// Function to calculate True Range
+double TrueRange(const int index)
+{
+    double high = High[index];
+    double low = Low[index];
+    double previousClose = Close[index + 1];
+    double tr = MathMax(high - low, MathMax(high - previousClose, previousClose - low));
+    return tr;
+}
